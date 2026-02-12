@@ -1,8 +1,10 @@
 -- web.lua - Conversion du module web C en Lua
 -- Équivalent de web.h et web.c
--- Utilise la bibliothèque http.lua (à installer via luarocks)
+-- Utilise socket.http (plus courant et facile à installer)
 
-local http = require("resty.http")  -- Alternative: require("socket.http")
+local socket = require("socket")
+local http = require("socket.http")
+local ltn12 = require("ltn12")
 
 local Web = {}
 
@@ -17,43 +19,44 @@ function WebContext.new(query)
     return self
 end
 
--- Fonction de callback pour traiter la réponse - Équivalent de write_callback
-local function process_response(ctx, response_body)
-    if response_body then
-        ctx.result = response_body
-    else
-        ctx.result = "Erreur: aucune réponse reçue"
+-- Fonction pour encoder une URL
+local function url_encode(str)
+    if str then
+        return string.gsub(str, "([^%w%.%- ])", function(c)
+            return string.format("%%%02X", string.byte(c))
+        end)
     end
+    return ""
 end
 
 -- Fonction principale de recherche web - Équivalent de web_search_agent_execute
 function Web.web_search_agent_execute(context)
     local ctx = context
     
-    -- Créer un client HTTP
-    local httpc = http.new()
-    
     -- Encoder la requête pour l'URL
-    local encoded_query = string.gsub(ctx.query, "[", function(c)
-        return string.format("%%%02X", string.byte(c))
-    end)
+    local encoded_query = url_encode(ctx.query)
     
     -- Construire l'URL pour DuckDuckGo
     local url = "https://api.duckduckgo.com/?q=" .. encoded_query .. "&format=json&no_redirect=1"
     
-    -- Effectuer la requête
-    local res, err = httpc:request_uri(url, {
+    -- Tableau pour stocker la réponse
+    local response_body = {}
+    
+    -- Effectuer la requête HTTP avec socket.http
+    local res, status_code = http.request{
+        url = url,
+        sink = ltn12.sink.table(response_body),
         method = "GET",
-        ssl_verify = false  -- Désactiver la vérification SSL pour simplifier (à améliorer en production)
-    })
+        headers = {
+            ["User-Agent"] = "GNU-AI Lua Client"
+        }
+    }
     
-    if not res then
-        ctx.result = "Erreur: " .. (err or "inconnu")
-        return
+    if res then
+        ctx.result = table.concat(response_body)
+    else
+        ctx.result = "Erreur: " .. (status_code or "requête HTTP échouée")
     end
-    
-    -- Traiter la réponse
-    process_response(ctx, res.body)
 end
 
 return {
