@@ -8,7 +8,7 @@ local IRCClient = {}
 
 -- Configuration par défaut
 local DEFAULT_CONFIG = {
-    server = "irc.libera.chat",
+    server = "irc.oftc.net",
     port = 6667,
     nickname = "GNU_AI_Bot",
     channel = "#gnu-ai-test",
