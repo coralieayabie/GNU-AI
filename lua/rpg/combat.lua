@@ -326,10 +326,9 @@ function Combat.display_combat_summary(combat)
     print(string.format("Santé finale - %s: %d/%d", combat.player.name, combat.player.health, combat.player.health_max))
     print(string.format("Santé finale - %s: %d/%d", combat.monster.name, combat.monster.health, combat.monster.health or 100))
     
-    print("╔════════════════════════════════════════════════════════════╗")
-    print("║              STATISTIQUES MISES À JOUR                ║")
-    print("╚════════════════════════════════════════════════════════════╝")
+    print("�#################################")
+    print("�### STATISTIQUES MISES A JOUR ###")
+    print("�#################################")
 end
 
 return Combat
->>>>>>> REPLACE

@@ -20,9 +20,9 @@ Conversion du projet GNU-AI de C vers Lua avec intégration d'un système RPG co
 Pour exécuter ce code Lua, vous aurez besoin de :
 
 1. **Lua 5.1+** - Installé sur votre système
-2. **LuaSocket** - Pour les requêtes HTTP et réseau :
+2. **LuaSocket** - Pour le client IRC et les connexions réseau :
    - `luarocks install luasocket` (méthode recommandée)
-   - Ou via votre gestionnaire de paquets système
+   - Ou via votre gestionnaire de paquets système: `sudo apt-get install lua-socket`
 
 ## Installation
 
@@ -49,19 +49,25 @@ en modifiant `main.lua` pour ne pas exécuter l'agent web.
 
 ## Exécution
 
-### Mode complet (avec web et RPG) :
-```bash
-cd lua
-lua main.lua
-```
-
-### Mode RPG uniquement (sans dépendances) :
+### Mode RPG pur (sans IRC) :
 ```bash
 cd lua
 lua main_rpg_only.lua
 ```
 
-### Mode test RPG :
+### Mode IRC + RPG (nouveau) :
+```bash
+cd lua
+lua main_irc.lua
+```
+
+### Mode test complet :
+```bash
+cd lua
+lua test_combat_system.lua
+```
+
+### Mode test d'intégration :
 ```bash
 cd lua
 lua test_rpg_integration.lua
@@ -70,14 +76,15 @@ lua test_rpg_integration.lua
 ### Si vous avez des problèmes de dépendances :
 Utilisez `main_rpg_only.lua` qui ne nécessite aucune bibliothèque externe.
 
-## Fonctionnalités RPG Intégrées
+## Fonctionnalités Intégrées
 
-### 🎭 Système de Personnages
+### 🎭 Système de Personnages RPG
 - **4 Classes jouables** : Mage, Humain, Hobbit, Elfe
 - **5 Attributs** : Intelligence, Force, Dextérité, Endurance, Magie
 - **Système d'énergie** (équivalent des points de vie)
 - **Niveaux 1-100** avec progression
 - **Sorts spécifiques** par classe
+- **Limite de 100 points** pour la création de personnages
 
 ### 👹 Système de Monstres
 - **2 Classes de monstres** : Loup-garou, Vampire
@@ -90,32 +97,64 @@ Utilisez `main_rpg_only.lua` qui ne nécessite aucune bibliothèque externe.
 - **Support multi-dés** (jusqu'à 10 dés)
 - **Formatage des résultats** clair et lisible
 
+### ⚔️ Système de Combat Avancé
+- **Combats tour par tour** entre joueurs et monstres
+- **Règles de combat** : esquive, blocage, coups critiques
+- **Gestion d'expérience** et level up
+- **Récompenses et butin** après les victoires
+
+### 🤖 Client IRC (Nouveau)
+- **Intégration complète** avec lua-irc-engine
+- **Commandes IRC** pour contrôler le RPG
+- **Bot IRC autonome** avec système de jeu
+- **Réponses automatiques** aux commandes
+
 ### 💬 Système de Commandes Unifié
 - **Commandes interactives** pour contrôler le RPG
 - **Interface simple** : `createplayer`, `createmonster`, `roll`, `stats`, etc.
 - **Intégration complète** avec le système d'agents
 
-## Commandes RPG Disponibles
+## Commandes Disponibles
+
+### Commandes RPG (Console et IRC)
 
 ```lua
--- Créer un personnage
-createplayer <nom> <classe> <niveau> <int> <str> <dex> <end> <mag>
+-- Créer un personnage (100 points max)
+!createplayer <nom> <classe> <niveau> <int> <str> <dex> <end> <mag>
+Exemple: !createplayer Gandalf mage 10 30 10 15 20 25
 
 -- Créer un monstre
-createmonster <nom> <classe> <niveau>
+!createmonster <nom> <classe> <niveau>
+Exemple: !createmonster Balrog vampire 12
+
+-- Lancer un combat
+!fight <joueur> <monstre>
+Exemple: !fight Gandalf Balrog
 
 -- Lancer des dés
-roll <nombre_de_dés>
+!roll <nombre_de_dés>
+Exemple: !roll 3
 
 -- Afficher les statistiques
-stats <player/monster> <nom>
+!stats <player/monster> <nom>
+Exemple: !stats player Gandalf
+
+-- Utiliser un objet
+!use <type> <nom>
+Exemple: !use potion Gandalf
 
 -- Lister les classes disponibles
-listclasses
+!listclasses
 
 -- Aide complète
-help
+!help
 ```
+
+### Commandes IRC Spécifiques
+
+- `!ping` - Tester la connexion au bot
+- `!version` - Afficher la version du bot
+- `!info` - Informations sur le bot
 
 ## Exemples d'Utilisation
 
