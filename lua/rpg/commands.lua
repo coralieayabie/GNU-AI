@@ -29,6 +29,23 @@ function RPGCommands.execute_command(command_str, context)
     for part in command_str:gmatch("%S+") do
         table.insert(parts, part)
     end
+end
+
+function faultyFunction()
+    local a = nil
+    print(a.value)  -- This will cause an error
+end
+
+function safeFunction()
+    local success, err = pcall(faultyFunction)
+    if not success then
+        print("Error:", err)
+        print(debug.traceback())
+    end
+end
+
+function safeFunction()
+
     
     if #parts == 0 then
         return "Erreur: commande vide"
@@ -202,41 +219,41 @@ end
 -- Fonction pour afficher l'aide
 function RPGCommands.show_help()
     local help_text = {
-        "╔════════════════════════════════════════════════════════════╗",
-        "║                  AIDE RPG GNU-AI AVANCÉ                 ║",
-        "╚════════════════════════════════════════════════════════════╝",
+        "###############################",
+        "###  AIDE RPG GNU-AI AVANCE ###",
+        "###############################",
         "",
-        "📋 COMMANDES DE BASE:",
+        "- COMMANDES DE BASE:",
         "  help - Affiche cette aide",
         "  createplayer <nom> <classe> <niveau> <int> <str> <dex> <end> <mag>",
         "  createmonster <nom> <classe> <niveau> - Crée un monstre",
         "  roll <nombre> - Lance des dés (max 10)",
         "  listclasses - Liste les classes disponibles",
         "",
-        "📊 COMMANDES DE STATISTIQUES:",
+        "- COMMANDES DE STATISTIQUES:",
         "  stats <player/monster> <nom> - Affiche les statistiques détaillées",
         "",
-        "⚔️ COMMANDES DE COMBAT:",
+        "- COMMANDES DE COMBAT:",
         "  fight <joueur> <monstre> - Lance un combat épique!",
         "",
-        "🎒 COMMANDES D'INVENTAIRE:",
+        " - COMMANDES D'INVENTAIRE:",
         "  use potion <joueur> - Utilise une potion de soin",
         "  use weapon <joueur> <arme> - Équipe une arme",
         "  use armor <joueur> <armure> - Équipe une armure",
         "  heal <joueur> <quantité> - Restaure la santé",
         "",
-        "📈 SYSTÈME DE CRÉATION (100 points max):",
+        "- SYSTEME DE CREATION (100 points max):",
         "  intelligence - Affecte la magie et la perception",
         "  strength - Affecte l'attaque physique",
         "  dexterity - Affecte l'esquive et la furtivité",
         "  endurance - Affecte la santé et la défense",
         "  magic - Affecte les sorts et la résistance magique",
         "",
-        "👥 CLASSES DISPONIBLES:",
+        "- CLASSES DISPONIBLES:",
         "  Personnages: " .. table.concat(RPGClasses.get_available_character_classes(), ", "),
         "  Monstres: " .. table.concat(RPGClasses.get_available_monster_classes(), ", "),
         "",
-        "🎮 EXEMPLES:",
+        "- EXEMPLES:",
         "  createplayer Aragorn humain 5 25 25 20 20 10",
         "  createmonster Balrog vampire 10",
         "  fight Aragorn Balrog",

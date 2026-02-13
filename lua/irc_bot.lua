@@ -85,6 +85,10 @@ end
 
 -- Traiter une commande RPG
 function IRCBot:process_command(sender, command)
+    if not command or command == "" then
+        return "Aucune commande spécifiée. Utilisez !help pour l'aide."
+    end
+    
     -- Extraire la commande (enlever le préfixe !)
     local cmd = command:match("^!(%w+)")
     if not cmd then return "Commande non reconnue. Utilisez !help pour l'aide." end
@@ -96,6 +100,10 @@ end
 
 -- Gérer les commandes IRC
 function IRCBot:handle_irc_command(sender, message)
+    if not message or message == "" then
+        return
+    end
+    
     -- Commandes RPG
     if message:match("^!%w+") then
         local response = self:process_command(sender, message)

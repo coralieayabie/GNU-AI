@@ -4,7 +4,7 @@ local config = {}
 
 -- Configuration IRC
 config.irc = {
-    server = "irc.libera.chat",
+    server = "irc.oftc.net",
     port = 6667,
     nickname = "GNU_AI_Bot",
     username = "gnu_ai",
