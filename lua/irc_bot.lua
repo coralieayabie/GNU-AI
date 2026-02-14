@@ -4,6 +4,9 @@
 local socket = require("socket")
 local config = require("config")
 local RPGAgent = require("rpg.rpg_agent")
+local Character = require("rpg.character")
+local Monster = require("rpg.monster")
+local Combat = require("rpg.combat")
 
 local IRCBot = {}
 
@@ -22,6 +25,7 @@ function IRCBot.new()
     self.rpg_agent = RPGAgent.create_rpg_agent()
     self.rpg_context = self.rpg_agent.context
     self.state = bot_state
+    self.combats = {}  -- Ajouter le tableau pour les combats actifs
     return self
 end
 
