@@ -169,7 +169,7 @@ function RPGCommands.execute_command(command_str, context)
             spells = monster.spells
         }
         
-        -- Lancer le combat
+        -- Lancer le combat avec 1 dé par défaut (peut être personnalisé)
         local combat = Combat.execute_full_combat(player, combat_monster)
         
         -- Créer un résumé compact pour IRC

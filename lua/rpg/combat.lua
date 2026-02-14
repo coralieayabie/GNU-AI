@@ -13,14 +13,15 @@ local DODGE_CHANCE_BASE = 15     -- Chance de base d'esquive
 local BLOCK_CHANCE_BASE = 20     -- Chance de base de bloquer
 
 -- Crée une nouvelle session de combat
-function Combat.create_combat_session(player, monster)
+function Combat.create_combat_session(player, monster, num_dice)
     return {
         player = player,
         monster = monster,
         current_turn = "player",  -- "player" ou "monster"
         turn_count = 0,
         log = {},
-        is_active = true
+        is_active = true,
+        num_dice = num_dice or 1  -- Nombre de dés par attaque, par défaut 1
     }
 end
 
@@ -30,7 +31,9 @@ local function add_combat_log(combat, message)
 end
 
 -- Calcule les dégâts infligés
-local function calculate_damage(attacker, defender, is_player_attacking)
+local function calculate_damage(attacker, defender, is_player_attacking, num_dice)
+    num_dice = num_dice or 1
+    
     local base_damage
     local attack_skill
     local defense_skill
@@ -47,17 +50,25 @@ local function calculate_damage(attacker, defender, is_player_attacking)
         defense_skill = Character.calculate_armor_defense(defender)
     end
     
-    -- Jet de dés pour les dégâts
-    local dice_roll = Dice.roll_d6()
+    -- Jets de dés pour les dégâts (support multi-dés)
+    local total_dice_roll = 0
+    local dice_rolls = {}
+    local dice_rolls_str = ""
+    
+    for i = 1, num_dice do
+        local roll = Dice.roll_d6()
+        table.insert(dice_rolls, roll)
+        total_dice_roll = total_dice_roll + roll
+    end
     
     -- Calculer les dégâts bruts
-    local raw_damage = base_damage + math.floor(attack_skill / 2) + dice_roll
+    local raw_damage = base_damage + math.floor(attack_skill / 2) + total_dice_roll
     
     -- Appliquer la défense
     local defense_reduction = math.floor(defense_skill / 3)
     local final_damage = math.max(1, raw_damage - defense_reduction)
     
-    return final_damage, dice_roll, raw_damage, defense_reduction
+    return final_damage, total_dice_roll, raw_damage, defense_reduction
 end
 
 -- Vérifie si une attaque est esquivée
@@ -103,26 +114,58 @@ local function check_critical_hit(attacker)
     return roll <= critical_chance
 end
 
--- Exécute une attaque
-local function perform_attack(combat, attacker, defender, is_player_attacking)
+-- Exécute une attaque avec détails
+local function perform_attack(combat, attacker, defender, is_player_attacking, num_dice)
+    num_dice = num_dice or 1  -- Par défaut 1 dé, peut être personnalisé
+    
     -- Vérifier l'esquive
     if check_dodge(defender) then
+        local dodge_chance = DODGE_CHANCE_BASE
+        if defender.skills and defender.skills.stealth then
+            dodge_chance = dodge_chance + defender.skills.stealth
+        elseif defender.attributes and defender.attributes.dexterity then
+            dodge_chance = dodge_chance + math.floor(defender.attributes.dexterity / 2)
+        end
+        
         local dodge_msg = is_player_attacking 
-            and defender.name .. " esquive l'attaque!"
-            or combat.player.name .. " esquive l'attaque!"
+            and string.format("%s esquive l'attaque! (Esquive: %d%%)", defender.name, dodge_chance)
+            or string.format("%s esquive l'attaque! (Esquive: %d%%)", combat.player.name, dodge_chance)
         add_combat_log(combat, "⚡ " .. dodge_msg)
         return 0, "esquivé"
     end
     
     -- Vérifier le blocage
     if check_block(defender) then
+        local block_chance = BLOCK_CHANCE_BASE
+        if defender.skills and defender.skills.defense then
+            block_chance = block_chance + defender.skills.defense
+        elseif defender.attributes and defender.attributes.endurance then
+            block_chance = block_chance + math.floor(defender.attributes.endurance / 3)
+        end
+        
         local block_msg = is_player_attacking 
-            and defender.name .. " bloque l'attaque! (Dégâts réduits)"
-            or combat.player.name .. " bloque l'attaque! (Dégâts réduits)"
+            and string.format("%s bloque l'attaque! (Blocage: %d%%, Dégâts réduits de 70%%)", defender.name, block_chance)
+            or string.format("%s bloque l'attaque! (Blocage: %d%%, Dégâts réduits de 70%%)", combat.player.name, block_chance)
         add_combat_log(combat, "🛡️ " .. block_msg)
         
         -- Dégâts réduits de 70% en cas de blocage
-        local damage, dice_roll, raw_damage, defense_reduction = calculate_damage(attacker, defender, is_player_attacking)
+        local damage, dice_roll, raw_damage, defense_reduction = calculate_damage(attacker, defender, is_player_attacking, num_dice)
+        
+        -- Recalculer les jets de dés pour l'affichage (blocage)
+        local dice_rolls_str
+        if num_dice > 1 then
+            local rolls = {}
+            local total = 0
+            for i = 1, num_dice do
+                local r = math.random(1, 6)
+                table.insert(rolls, r)
+                total = total + r
+            end
+            dice_rolls_str = table.concat(rolls, "+") .. "=" .. total
+        else
+            dice_rolls_str = tostring(dice_roll)
+        end
+        local original_damage = damage
         damage = math.floor(damage * 0.3)
         
         if is_player_attacking then
@@ -132,24 +175,58 @@ local function perform_attack(combat, attacker, defender, is_player_attacking)
         end
         
         local damage_msg = is_player_attacking 
-            and string.format("💥 %s inflige %d dégâts (blocage) à %s! (Jet: %d)", 
-                     combat.player.name, damage, defender.name, dice_roll)
-            or string.format("💥 %s inflige %d dégâts (blocage) à %s! (Jet: %d)", 
-                     defender.name, damage, combat.player.name, dice_roll)
+            and string.format("💥 %s inflige %d dégâts (blocage: %d→%d) à %s! (Jet: %s)", 
+                     combat.player.name, damage, original_damage, damage, defender.name, dice_rolls_str)
+            or string.format("💥 %s inflige %d dégâts (blocage: %d→%d) à %s! (Jet: %s)", 
+                     defender.name, damage, original_damage, damage, combat.player.name, dice_rolls_str)
         add_combat_log(combat, damage_msg)
         
         return damage, "bloqué"
     end
     
     -- Vérifier le coup critique
+    local critical_chance = CRITICAL_HIT_CHANCE
+    if is_player_attacking and combat.player.skills and combat.player.skills.perception then
+        critical_chance = critical_chance + math.floor(combat.player.skills.perception / 2)
+    end
+    
     local is_critical = check_critical_hit(is_player_attacking and combat.player or defender)
     
-    -- Calculer les dégâts
-    local damage, dice_roll, raw_damage, defense_reduction = calculate_damage(attacker, defender, is_player_attacking)
+    -- Formater les jets de dés
+    local dice_rolls_str = tostring(dice_roll)
+    if num_dice > 1 then
+        -- Pour plusieurs dés, nous devons recalculer pour afficher chaque jet
+        local rolls = {}
+        local total = 0
+        for i = 1, num_dice do
+            local r = math.random(1, 6)
+            table.insert(rolls, r)
+            total = total + r
+        end
+        dice_rolls_str = table.concat(rolls, "+") .. "=" .. total
+    end
+    
+    -- Calculer les dégâts avec le nombre de dés spécifié
+    local damage, dice_roll, raw_damage, defense_reduction = calculate_damage(attacker, defender, is_player_attacking, num_dice)
+    
+    -- Recalculer les jets de dés pour l'affichage (puisque calculate_damage utilise une somme)
+    local dice_rolls_str
+    if num_dice > 1 then
+        local rolls = {}
+        local total = 0
+        for i = 1, num_dice do
+            local r = math.random(1, 6)
+            table.insert(rolls, r)
+            total = total + r
+        end
+        dice_rolls_str = table.concat(rolls, "+") .. "=" .. total
+    else
+        dice_rolls_str = tostring(dice_roll)
+    end
     
     if is_critical then
         damage = math.floor(damage * CRITICAL_MULTIPLIER)
-        add_combat_log(combat, "🎯 COUP CRITIQUE! Dégâts doublés!")
+        add_combat_log(combat, string.format("🎯 COUP CRITIQUE! (%d%%) Dégâts doublés! %d→%d", critical_chance, damage/2, damage))
         
         if is_player_attacking then
             combat.player.combat_stats.critical_hits = combat.player.combat_stats.critical_hits + 1
@@ -166,12 +243,16 @@ local function perform_attack(combat, attacker, defender, is_player_attacking)
         combat.player.combat_stats.damage_taken = combat.player.combat_stats.damage_taken + damage
     end
     
-    -- Message de dégâts
+    -- Message de dégâts détaillé avec tous les jets de dés
+    local dice_rolls_str = (dice_rolls and num_dice > 1) and table.concat(dice_rolls, "+") .. "=" .. total_dice_roll or tostring(total_dice_roll)
+    
     local damage_msg = is_player_attacking 
-        and string.format("💥 %s inflige %d dégâts à %s! (Jet: %d, Brut: %d, Défense: %d)", 
-                 combat.player.name, damage, defender.name, dice_roll, raw_damage, defense_reduction)
-        or string.format("💥 %s inflige %d dégâts à %s! (Jet: %d)", 
-                 defender.name, damage, combat.player.name, dice_roll)
+        and string.format("💥 %s inflige %d dégâts à %s! (Dés: %s, Brut: %d, Défense: %d)%s", 
+                 combat.player.name, damage, defender.name, dice_rolls_str, raw_damage, defense_reduction,
+                 is_critical and " 🎯" or "")
+        or string.format("💥 %s inflige %d dégâts à %s! (Dés: %s)%s", 
+                 defender.name, damage, combat.player.name, dice_rolls_str,
+                 is_critical and " 🎯" or "")
     add_combat_log(combat, damage_msg)
     
     return damage, "normal"
@@ -191,7 +272,7 @@ function Combat.execute_turn(combat)
         add_combat_log(combat, "🔹 Tour de " .. combat.player.name)
         
         -- Le joueur attaque
-        local damage, result = perform_attack(combat, combat.player, combat.monster, true)
+        local damage, result = perform_attack(combat, combat.player, combat.monster, true, combat.num_dice)
         
         -- Vérifier si le monstre est vaincu
         if combat.monster.health <= 0 then
@@ -239,7 +320,7 @@ function Combat.execute_turn(combat)
         add_combat_log(combat, "🔴 Tour de " .. combat.monster.name)
         
         -- Le monstre attaque
-        local damage, result = perform_attack(combat, combat.monster, combat.player, false)
+        local damage, result = perform_attack(combat, combat.monster, combat.player, false, combat.num_dice)
         
         -- Vérifier si le joueur est vaincu
         if combat.player.health <= 0 then
