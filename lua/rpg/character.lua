@@ -30,7 +30,20 @@ function Character.create_with_attributes(name, class_name, level, points_distri
     end
     
     if total_points > MAX_CREATION_POINTS then
-        error("Erreur: La somme des attributs ne peut pas dépasser " .. MAX_CREATION_POINTS .. " points")
+        error(string.format("❌ Erreur de création: Vous avez utilisé %d points, mais la limite est de %d points.\n", 
+                          total_points, MAX_CREATION_POINTS) ..
+              string.format("💡 Conseils: Réduisez certains attributs. Somme actuelle: %d (Int:%d + Str:%d + Dex:%d + End:%d + Mag:%d)\n",
+                          total_points, 
+                          points_distribution.intelligence or 0,
+                          points_distribution.strength or 0,
+                          points_distribution.dexterity or 0,
+                          points_distribution.endurance or 0,
+                          points_distribution.magic or 0) ..
+              "🎯 Suggestions pour 100 points:\n" ..
+              "  • Mage: Int:30 Str:10 Dex:15 End:20 Mag:25\n" ..
+              "  • Guerrier: Int:10 Str:30 Dex:20 End:25 Mag:15\n" ..
+              "  • Voleur: Int:15 Str:20 Dex:25 End:20 Mag:20\n" ..
+              "  • Équilibré: Int:20 Str:20 Dex:20 End:20 Mag:20")
     end
     
     -- Initialiser les attributs de base d'abord avec vérification de nil

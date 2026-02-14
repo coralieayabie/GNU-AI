@@ -57,6 +57,12 @@ function RPGCommands.execute_command(command_str, context)
             return "Usage: createplayer <nom> <classe> <niveau> <intelligence> <force> <dexterité> <endurance> <magie>"
         end
         local name, class_name, level = parts[2], parts[3], tonumber(parts[4])
+        
+        -- Vérification que le niveau est valide
+        if not level or level < 1 or level > 100 then
+            return "❌ Erreur: Le niveau doit être un nombre entre 1 et 100"
+        end
+        
         local attrs = {
             intelligence = tonumber(parts[5]),
             strength = tonumber(parts[6]),
@@ -65,9 +71,29 @@ function RPGCommands.execute_command(command_str, context)
             magic = tonumber(parts[9])
         }
         
-        local character = Character.create_with_attributes(name, class_name, level, attrs)
-        context.characters[name] = character
-        return "Personnage créé: " .. name .. " (" .. class_name .. ")"
+        -- Vérification que tous les attributs sont des nombres valides
+        for attr_name, value in pairs(attrs) do
+            if not value or value < 0 or value > 100 then
+                return string.format("❌ Erreur: L'attribut %s doit être un nombre entre 0 et 100", attr_name)
+            end
+        end
+        
+        -- Vérification préalable des points
+        local total_points = (attrs.intelligence or 0) + (attrs.strength or 0) + (attrs.dexterity or 0) + (attrs.endurance or 0) + (attrs.magic or 0)
+        if total_points > 100 then
+            return string.format("❌ Erreur: Trop de points! Vous avez utilisé %d/100. " .. 
+                               "Réduisez certains attributs. Actuel: Int:%d Str:%d Dex:%d End:%d Mag:%d",
+                               total_points, attrs.intelligence, attrs.strength, attrs.dexterity, attrs.endurance, attrs.magic)
+        end
+        
+        -- Création du personnage
+        local success, character_or_error = pcall(Character.create_with_attributes, name, class_name, level, attrs)
+        if not success then
+            return "❌ " .. character_or_error
+        end
+        
+        context.characters[name] = character_or_error
+        return "✅ Personnage créé: " .. name .. " (" .. class_name .. " niveau " .. level .. ") | 💪" .. character_or_error.health .. "HP"
     
     elseif cmd == "createmonster" then
         if #parts < 4 then
