@@ -135,6 +135,16 @@ function IRCBot:handle_irc_command(sender, message)
     end
 end
 
+-- Fonction pour envoyer un message de combat sur le canal
+function IRCBot:send_combat_log(message)
+    -- Vérifier que le message n'est pas trop long
+    if #message > 400 then
+        message = message:sub(1, 400) .. "..."
+    end
+    self:send("PRIVMSG " .. config.irc.default_channel .. " :" .. message)
+end
+end
+
 -- Boucle principale du bot
 function IRCBot:run()
     if not self:connect() then

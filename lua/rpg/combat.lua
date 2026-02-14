@@ -13,7 +13,7 @@ local DODGE_CHANCE_BASE = 15     -- Chance de base d'esquive
 local BLOCK_CHANCE_BASE = 20     -- Chance de base de bloquer
 
 -- Crée une nouvelle session de combat
-function Combat.create_combat_session(player, monster, num_dice)
+function Combat.create_combat_session(player, monster, num_dice, max_turns, irc_bot)
     return {
         player = player,
         monster = monster,
@@ -21,13 +21,20 @@ function Combat.create_combat_session(player, monster, num_dice)
         turn_count = 0,
         log = {},
         is_active = true,
-        num_dice = num_dice or 1  -- Nombre de dés par attaque, par défaut 1
+        num_dice = num_dice or 1,  -- Nombre de dés par attaque, par défaut 1
+        max_turns = max_turns or 0,  -- Limite de tours (0 = illimité)
+        irc_bot = irc_bot            -- Référence au bot IRC pour les logs
     }
 end
 
 -- Ajoute une entrée au journal de combat
 local function add_combat_log(combat, message)
     table.insert(combat.log, message)
+    
+    -- Envoyer sur IRC si un bot est connecté
+    if combat.irc_bot then
+        combat.irc_bot:send_combat_log(message)
+    end
 end
 
 -- Calcule les dégâts infligés
@@ -266,6 +273,13 @@ function Combat.execute_turn(combat)
     
     combat.turn_count = combat.turn_count + 1
     add_combat_log(combat, string.format("=== TOUR %d ===", combat.turn_count))
+    
+    -- Vérifier la limite de tours
+    if combat.max_turns > 0 and combat.turn_count > combat.max_turns then
+        combat.is_active = false
+        add_combat_log(combat, string.format("⏰ Combat terminé après %d tours (limite atteinte)", combat.max_turns))
+        return false, "limite_de_tours"
+    end
     
     if combat.current_turn == "player" then
         -- Tour du joueur

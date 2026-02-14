@@ -169,8 +169,19 @@ function RPGCommands.execute_command(command_str, context)
             spells = monster.spells
         }
         
-        -- Lancer le combat avec 1 dé par défaut (peut être personnalisé)
-        local combat = Combat.execute_full_combat(player, combat_monster)
+        -- Créer un combat avec support IRC pour les logs en temps réel
+        local combat = Combat.create_combat_session(player, combat_monster, 1, 0, context.irc_bot)
+        
+        -- Annoncer le début du combat sur IRC
+        if context.irc_bot then
+            context.irc_bot:send_combat_log(string.format("🔥 COMBAT COMMENCÉ: %s (Lvl %d) vs %s (Lvl %d)", 
+                player.name, player.level, monster.name, monster.level))
+        end
+        
+        -- Exécuter le combat tour par tour
+        while combat.is_active do
+            Combat.execute_turn(combat)
+        end
         
         -- Créer un résumé compact pour IRC
         local result = combat.monster.health <= 0 and "🎉 VICTOIRE" or "☠️ DÉFAITE"
