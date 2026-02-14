@@ -117,6 +117,45 @@ Utilisez `main_rpg_only.lua` qui ne nécessite aucune bibliothèque externe.
 - **Gestion d'expérience** et level up
 - **Récompenses et butin** après les victoires
 
+#### 🎮 Mécaniques de Combat Détaillées
+
+**Tour par tour** : Les joueurs et monstres alternent les attaques
+
+**Esquive** (🛡️) :
+- Chance de base : 15%
+- Bonus : +Dextérité/2 ou +Furtivité
+- Formule : `chance_esquive = 15 + (dexterité/2) ou (furtivité)`
+
+**Blocage** (🔥) :
+- Chance de base : 20%
+- Bonus : +Endurance/3 ou +Défense
+- Réduction : 70% des dégâts
+- Formule : `chance_blocage = 20 + (endurance/3) ou (défense)`
+
+**Coups critiques** (🎯) :
+- Chance de base : 10%
+- Bonus : +Perception/2
+- Multiplicateur : ×2 dégâts
+- Formule : `chance_critique = 10 + (perception/2)`
+
+**Calcul des dégâts** (💥) :
+```
+Dégâts bruts = Dégâts_base + (Attaque/2) + jet_d6
+Dégâts finaux = max(1, Dégâts_bruts - (Défense/3))
+```
+
+**Récompenses** (🏆) :
+- **Expérience** : Niveau_monstre × 20
+- **Or** : Niveau_monstre × 15
+- **Potion** : 30% de chance de drop
+
+**Exemple de combat** :
+```
+!createplayer Aragorn humain 10 25 25 20 20 10
+!createmonster Balrog vampire 12
+!fight Aragorn Balrog
+```
+
 ### 🤖 Client IRC (Nouveau)
 - **Intégration complète** avec lua-irc-engine
 - **Commandes IRC** pour contrôler le RPG
@@ -160,6 +199,9 @@ Exemple: !use potion Gandalf
 -- Lister les classes disponibles
 !listclasses
 
+-- Aide au combat
+!combathelp ou !fighthelp
+
 -- Aide complète
 !help
 ```
@@ -192,6 +234,14 @@ roll 3
 ```lua
 stats player Gandalf
 stats monster Dracula
+```
+
+### Obtenir de l'aide sur le combat:
+```lua
+combathelp
+-- ou
+fighthelp
+-- Résultat: Affiche les mécaniques de combat détaillées
 ```
 
 ## Différences majeures entre C et Lua

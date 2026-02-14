@@ -217,6 +217,8 @@ function RPGCommands.execute_command(command_str, context)
         return string.format("❤️ %s a été soigné! Santé: %d/%d", 
                           player_name, new_health, context.characters[player_name].health_max)
     
+    elseif cmd == "combathelp" or cmd == "fighthelp" then
+        return RPGCommands.show_combat_help()
     else
         return "Commande inconnue: " .. cmd .. ". Tapez 'help' pour l'aide."
     end
@@ -226,15 +228,35 @@ end
 function RPGCommands.show_help()
     local help_text = {
         "AIDE RPG GNU-AI:",
-        "📋 COMMANDES: help, createplayer, createmonster, roll, listclasses, stats, fight, use, heal",
+        "📋 COMMANDES: help, combathelp, createplayer, createmonster, roll, listclasses, stats, fight, use, heal",
         "👥 CLASSES: " .. table.concat(RPGClasses.get_available_character_classes(), ", ") .. " | Monstres: " .. table.concat(RPGClasses.get_available_monster_classes(), ", "),
         "🎮 EXEMPLE: !createplayer Gandalf mage 10 30 15 20 20 25",
         "📊 STATS: !stats player Gandalf",
         "⚔️ COMBAT: !fight Gandalf Balrog",
         "🎲 DÉS: !roll 3",
+        "💡 AIDE COMBAT: !combathelp ou !fighthelp",
         "💬 Plus d'aide: https://github.com/coralieayabie/GNU-AI"
     }
     return table.concat(help_text, " | ")
+end
+
+-- Fonction pour afficher l'aide spécifique au combat
+function RPGCommands.show_combat_help()
+    local combat_help = {
+        "🎮 AIDE SYSTÈME DE COMBAT RPG:",
+        "⚔️ COMMANDE: !fight <joueur> <monstre>",
+        "📊 MÉCANIQUES: Tour par tour avec esquive/blocage/critiques",
+        "🎲 JETS: Basés sur d6 avec modificateurs de compétences",
+        "💥 DÉGÂTS: Calculés avec attaque/défense/armure",
+        "🛡️ ESQUIVE: Chance basée sur dextérité/furtivité",
+        "🔥 BLOCAGE: Réduit dégâts de 70% (basé sur endurance)",
+        "🎯 CRITIQUE: Dégâts doublés (10% + bonus perception)",
+        "🏆 RÉCOMPENSES: EXP + Or + Potions (30% chance)",
+        "📈 EXP: Niveau_monstre × 20 par victoire",
+        "💰 OR: Niveau_monstre × 15 par victoire",
+        "💬 EXEMPLE: !fight Aragorn Balrog"
+    }
+    return table.concat(combat_help, " | ")
 end
 
 -- Fonction pour obtenir la liste des commandes
