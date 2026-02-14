@@ -169,19 +169,31 @@ function RPGCommands.execute_command(command_str, context)
             spells = monster.spells
         }
         
+        -- Créer un ID unique pour le combat
+        local combat_id = "combat_" .. os.time()
+        
         -- Créer un combat avec support IRC pour les logs en temps réel
         local combat = Combat.create_combat_session(player, combat_monster, 1, 0, context.irc_bot)
         
+        -- Stocker le combat dans le contexte pour un contrôle ultérieur
+        if not context.combats then
+            context.combats = {}
+        end
+        context.combats[combat_id] = combat
+        
         -- Annoncer le début du combat sur IRC
         if context.irc_bot then
-            context.irc_bot:send_combat_log(string.format("🔥 COMBAT COMMENCÉ: %s (Lvl %d) vs %s (Lvl %d)", 
-                player.name, player.level, monster.name, monster.level))
+            context.irc_bot:send_combat_log(string.format("🔥 COMBAT COMMENCÉ: %s (Lvl %d) vs %s (Lvl %d) [ID: %s]", 
+                player.name, player.level, monster.name, monster.level, combat_id))
         end
         
         -- Exécuter le combat tour par tour
         while combat.is_active do
             Combat.execute_turn(combat)
         end
+        
+        -- Supprimer le combat du contexte après la fin
+        context.combats[combat_id] = nil
         
         -- Créer un résumé compact pour IRC
         local result = combat.monster.health <= 0 and "🎉 VICTOIRE" or "☠️ DÉFAITE"
@@ -256,6 +268,54 @@ function RPGCommands.execute_command(command_str, context)
     
     elseif cmd == "combathelp" or cmd == "fighthelp" then
         return RPGCommands.show_combat_help()
+    elseif cmd == "setdice" then
+        if #parts < 3 then
+            return "Usage: setdice <combat_id> <nombre> - Définir le nombre de dés (1-5)"
+        end
+        local combat_id = parts[2]
+        local num_dice = tonumber(parts[3]) or 1
+        if num_dice < 1 or num_dice > 5 then
+            return "❌ Erreur: Le nombre de dés doit être entre 1 et 5"
+        end
+        if not context.combats then
+            context.combats = {}
+        end
+        if not context.combats[combat_id] then
+            return "❌ Erreur: Combat non trouvé: " .. combat_id
+        end
+        Combat.set_num_dice(context.combats[combat_id], num_dice)
+        return "✅ Nombre de dés défini à " .. num_dice
+    elseif cmd == "listcombats" then
+        if not context.combats or next(context.combats) == nil then
+            return "Aucun combat actif"
+        end
+        local combat_list = {}
+        for combat_id, combat in pairs(context.combats) do
+            table.insert(combat_list, string.format("%s: %s vs %s (Tour %d)", 
+                combat_id, combat.player.name, combat.monster.name, combat.turn_count))
+        end
+        return "Combats actifs: " .. table.concat(combat_list, ", ")
+    elseif cmd == "setaction" then
+        if #parts < 4 then
+            return "Usage: setaction <combat_id> <joueur/monstre> <action> - Définir l'action (attaque/défense/esquive/magie)"
+        end
+        local combat_id = parts[2]
+        local target = parts[3]:lower()
+        local action = parts[4]:lower()
+        
+        if not context.combats or not context.combats[combat_id] then
+            return "❌ Erreur: Combat non trouvé: " .. combat_id
+        end
+        
+        if target == "joueur" or target == "player" then
+            Combat.set_player_action(context.combats[combat_id], action)
+        elseif target == "monstre" or target == "monster" then
+            Combat.set_monster_action(context.combats[combat_id], action)
+        else
+            return "❌ Erreur: Cible invalide. Utilisez 'joueur' ou 'monstre'"
+        end
+        
+        return "✅ Action définie: " .. target .. " -> " .. action
     else
         return "Commande inconnue: " .. cmd .. ". Tapez 'help' pour l'aide."
     end
@@ -265,7 +325,7 @@ end
 function RPGCommands.show_help()
     local help_text = {
         "AIDE RPG GNU-AI:",
-        "📋 COMMANDES: help, combathelp, createplayer, createmonster, roll, listclasses, stats, fight, use, heal",
+        "📋 COMMANDES: help, combathelp, createplayer, createmonster, roll, listclasses, stats, fight, use, heal, listcombats, setdice, setaction",
         "👥 CLASSES: " .. table.concat(RPGClasses.get_available_character_classes(), ", ") .. " | Monstres: " .. table.concat(RPGClasses.get_available_monster_classes(), ", "),
         "🎮 EXEMPLE: !createplayer Gandalf mage 10 30 15 20 20 25",
         "📊 STATS: !stats player Gandalf",
@@ -280,18 +340,20 @@ end
 -- Fonction pour afficher l'aide spécifique au combat
 function RPGCommands.show_combat_help()
     local combat_help = {
-        "🎮 AIDE SYSTÈME DE COMBAT RPG:",
+        "🎮 AIDE SYSTÈME DE COMBAT RPG AVANCÉ:",
         "⚔️ COMMANDE: !fight <joueur> <monstre>",
-        "📊 MÉCANIQUES: Tour par tour avec esquive/blocage/critiques",
-        "🎲 JETS: Basés sur d6 avec modificateurs de compétences",
+        "📊 MÉCANIQUES: Tour par tour avec choix d'actions",
+        "🎲 JETS: 1-5 dés avec modificateurs de compétences",
         "💥 DÉGÂTS: Calculés avec attaque/défense/armure",
         "🛡️ ESQUIVE: Chance basée sur dextérité/furtivité",
         "🔥 BLOCAGE: Réduit dégâts de 70% (basé sur endurance)",
         "🎯 CRITIQUE: Dégâts doublés (10% + bonus perception)",
+        "✨ MAGIE: Sorts aléatoires pour chaque classe",
         "🏆 RÉCOMPENSES: EXP + Or + Potions (30% chance)",
         "📈 EXP: Niveau_monstre × 20 par victoire",
         "💰 OR: Niveau_monstre × 15 par victoire",
-        "💬 EXEMPLE: !fight Aragorn Balrog"
+        "💬 EXEMPLE: !fight Aragorn Balrog",
+        "🎮 CONTRÔLE: !setdice <id> <1-5>, !setaction <id> <cible> <action>"
     }
     return table.concat(combat_help, " | ")
 end

@@ -143,7 +143,6 @@ function IRCBot:send_combat_log(message)
     end
     self:send("PRIVMSG " .. config.irc.default_channel .. " :" .. message)
 end
-end
 
 -- Boucle principale du bot
 function IRCBot:run()

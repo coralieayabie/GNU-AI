@@ -23,7 +23,9 @@ function Combat.create_combat_session(player, monster, num_dice, max_turns, irc_
         is_active = true,
         num_dice = num_dice or 1,  -- Nombre de dés par attaque, par défaut 1
         max_turns = max_turns or 0,  -- Limite de tours (0 = illimité)
-        irc_bot = irc_bot            -- Référence au bot IRC pour les logs
+        irc_bot = irc_bot,           -- Référence au bot IRC pour les logs
+        player_action = "auto",    -- Action choisie par le joueur (auto/attaque/défense/esquive/magie)
+        monster_action = "auto"    -- Action choisie par le monstre (auto/attaque/défense/esquive/magie)
     }
 end
 
@@ -285,8 +287,19 @@ function Combat.execute_turn(combat)
         -- Tour du joueur
         add_combat_log(combat, "🔹 Tour de " .. combat.player.name)
         
-        -- Le joueur attaque
-        local damage, result = perform_attack(combat, combat.player, combat.monster, true, combat.num_dice)
+        -- Exécuter l'action choisie ou automatique
+        if combat.player_action == "attaque" or combat.player_action == "auto" then
+            local damage, result = perform_attack(combat, combat.player, combat.monster, true, combat.num_dice)
+        elseif combat.player_action == "défense" then
+            add_combat_log(combat, string.format("🛡️ %s se prépare à défendre!", combat.player.name))
+            -- Augmenter temporairement la défense pour ce tour
+        elseif combat.player_action == "esquive" then
+            add_combat_log(combat, string.format("🏃 %s tente une esquive proactive!", combat.player.name))
+            -- Augmenter temporairement l'esquive pour ce tour
+        elseif combat.player_action == "magie" then
+            add_combat_log(combat, string.format("✨ %s lance un sort!", combat.player.name))
+            -- Lancer un sort aléatoire
+        end
         
         -- Vérifier si le monstre est vaincu
         if combat.monster.health <= 0 then
@@ -333,8 +346,19 @@ function Combat.execute_turn(combat)
         -- Tour du monstre
         add_combat_log(combat, "🔴 Tour de " .. combat.monster.name)
         
-        -- Le monstre attaque
-        local damage, result = perform_attack(combat, combat.monster, combat.player, false, combat.num_dice)
+        -- Exécuter l'action choisie ou automatique
+        if combat.monster_action == "attaque" or combat.monster_action == "auto" then
+            local damage, result = perform_attack(combat, combat.monster, combat.player, false, combat.num_dice)
+        elseif combat.monster_action == "défense" then
+            add_combat_log(combat, string.format("🛡️ %s se prépare à défendre!", combat.monster.name))
+            -- Augmenter temporairement la défense pour ce tour
+        elseif combat.monster_action == "esquive" then
+            add_combat_log(combat, string.format("🏃 %s tente une esquive proactive!", combat.monster.name))
+            -- Augmenter temporairement l'esquive pour ce tour
+        elseif combat.monster_action == "magie" then
+            add_combat_log(combat, string.format("✨ %s lance un sort!", combat.monster.name))
+            -- Lancer un sort aléatoire
+        end
         
         -- Vérifier si le joueur est vaincu
         if combat.player.health <= 0 then
@@ -396,6 +420,24 @@ function Combat.display_combat_log(combat)
     print("╔════════════════════════════════════════════════════════════╗")
     print("║                    FIN DU COMBAT                      ║")
     print("╚════════════════════════════════════════════════════════════╝")
+end
+
+-- Définir le nombre de dés pour le combat
+function Combat.set_num_dice(combat, num_dice)
+    combat.num_dice = num_dice or 1
+    add_combat_log(combat, string.format("🎲 Nombre de dés défini à %d", num_dice))
+end
+
+-- Définir l'action du joueur
+function Combat.set_player_action(combat, action)
+    combat.player_action = action or "auto"
+    add_combat_log(combat, string.format("⚔️ Action du joueur: %s", action))
+end
+
+-- Définir l'action du monstre
+function Combat.set_monster_action(combat, action)
+    combat.monster_action = action or "auto"
+    add_combat_log(combat, string.format("👹 Action du monstre: %s", action))
 end
 
 -- Affiche un résumé du combat
