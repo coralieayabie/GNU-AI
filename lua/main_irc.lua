@@ -4,7 +4,7 @@ local IRCClient = require("irc_client")
 
 -- Configuration du bot
 local config = {
-    server = "irc.libera.chat",
+    server = "irc.oftc.net",
     port = 6667,
     nickname = "GNU_AI_Bot",
     channel = "#gnu-ai-test",
