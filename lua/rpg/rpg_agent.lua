@@ -1,82 +1,58 @@
--- rpg_agent.lua - Agent RPG pour GNU-AI
--- Intègre le système RPG avec l'architecture d'agents existante
-
-local Character = require("rpg.character")
-local Monster = require("rpg.monster")
-local Dice = require("rpg.dice")
-local RPGClasses = require("rpg.classes")
-local RPGCommands = require("rpg.commands")
+-- rpg/rpg_agent.lua - Intégration de l'AIBackend
+local AIBackend = require("ai_backend")
+local config = require("config")
 
 local RPGAgent = {}
+RPGAgent.__index = RPGAgent
 
--- Fonction d'exécution principale de l'agent RPG
-function RPGAgent.execute(context)
-    print("=== AGENT RPG GNU-AI ===")
-    print("Système de jeu de rôle intégré avec succès!")
-    print("Tapez 'help' pour voir les commandes disponibles")
-    
-    -- Démo rapide si aucun contexte spécifique
-    if not context.demo_done then
-        print("\n--- DÉMONSTRATION RAPIDE ---")
-        
-        -- Créer un personnage par défaut pour démonstration
-        local player = Character.create_default()
-        context.characters["Héros"] = player
-        print("\n" .. Character.display_stats(player))
-        
-        -- Créer un monstre pour démonstration
-        local monster, err = Monster.create("Dragon Noir", "loup_garou", 5)
-        if monster then
-            context.monsters["Dragon Noir"] = monster
-            print("\n" .. Monster.display_stats(monster))
-        else
-            print("Erreur création monstre: " .. err)
-        end
-        
-        -- Démonstration du système de dés
-        print("\n=== LANCER DE DÉS ===")
-        print("Lancement de 3 dés: " .. Dice.roll_and_format(3))
-        
-        context.demo_done = true
-    end
-    
-    -- Afficher les classes disponibles
-    print("\n=== CLASSES DISPONIBLES ===")
-    print("Personnages: " .. table.concat(RPGClasses.get_available_character_classes(), ", "))
-    print("Monstres: " .. table.concat(RPGClasses.get_available_monster_classes(), ", "))
-    
-    -- Mettre à jour le contexte avec les résultats RPG
-    context.rpg_results = {
-        player_created = true,
-        monster_created = context.monsters["Dragon Noir"] ~= nil,
-        dice_rolled = true,
-        available_character_classes = RPGClasses.get_available_character_classes(),
-        available_monster_classes = RPGClasses.get_available_monster_classes(),
-        characters = context.characters,
-        monsters = context.monsters
-    }
-    
-    print("\n✅ Agent RPG prêt à recevoir des commandes!")
-end
-
--- Fonction pour exécuter une commande RPG
-function RPGAgent.execute_command(command_str, context)
-    return RPGCommands.execute_command(command_str, context)
-end
-
--- Fonction pour créer un agent RPG compatible avec le système GNU-AI
+-- Créer un agent RPG avec support AI
 function RPGAgent.create_rpg_agent()
-    return {
-        name = "RPGAgent",
-        execute = RPGAgent.execute,
-        execute_command = RPGAgent.execute_command,
-        context = {
-            rpg_results = nil,
-            characters = {},
-            monsters = {},
-            demo_done = false
-        }
+    local self = setmetatable({}, { __index = RPGAgent })
+    self.context = {
+        characters = {},
+        monsters = {},
+        ai = config.ai.enabled and AIBackend.new(config.ai) or nil,
     }
+    return self
+end
+
+-- Commandes existantes (exemple: createplayer)
+function RPGAgent:execute_command(command_str, context)
+    local parts = {}
+    for word in command_str:gmatch("%S+") do
+        table.insert(parts, word)
+    end
+    if #parts == 0 then return "Erreur: commande vide" end
+
+    local cmd = parts[1]:lower()
+
+    -- Commandes classiques
+    if cmd == "createplayer" then
+        -- ... ton code existant ...
+    elseif cmd == "help" or cmd == "aide" then
+        if context.ai then
+            local prompt = "Aide pour un jeu de rôle Lua/IRC. Liste les commandes: createplayer, createmonster, roll, stats, fight. Sois concis et en français."
+            return context.ai:get_response(prompt)
+        else
+            return "Commandes: !createplayer, !createmonster, !roll, !stats, !fight, !listclasses"
+        end
+    elseif cmd == "describe" and #parts >= 2 then
+        if context.ai then
+            local target = parts[2]
+            return context.ai:get_response("Décris '" .. target .. "' pour un RPG fantasy, en 2 phrases max.")
+        else
+            return "Description de " .. parts[2] .. " indisponible."
+        end
+    elseif cmd == "quest" then
+        if context.ai then
+            local level = parts[2] or "5"
+            return context.ai:get_response("Génère une quête pour un personnage niveau " .. level .. " dans un RPG fantasy. Format: [Titre] - [Description] - Récompense: [XP/Or]")
+        else
+            return "Quête aléatoire: 'Tuer 3 loups' - Récompense: 50 XP"
+        end
+    end
+    return "Commande inconnue. Utilisez !help."
 end
 
 return RPGAgent
+

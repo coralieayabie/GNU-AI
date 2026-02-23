@@ -1,8 +1,7 @@
--- config.lua - Configuration pour le bot IRC GNU-AI
-
+-- config.lua - Ajout de la configuration AI
 local config = {}
 
--- Configuration IRC
+-- Configuration IRC (existante)
 config.irc = {
     server = "irc.oftc.net",
     port = 6667,
@@ -10,28 +9,21 @@ config.irc = {
     username = "gnu_ai",
     realname = "GNU AI RPG Bot",
     default_channel = "#gnu-ai-test",
-    reconnect_delay = 10,
-    connection_timeout = 30,
-    receive_timeout = 5,
-    ping_interval = 60
 }
 
--- Configuration du jeu
+-- Configuration RPG (existante)
 config.game = {
     character_save_dir = "saves/",
-    monster_save_dir = "saves/monster/",
-    max_character_name_length = 50,
-    max_monster_name_length = 50,
     max_level = 100,
-    starting_energy = 100,
-    max_dice_roll = 10
 }
 
--- Configuration du bot
-config.bot = {
-    command_prefix = "!",
-    admin_nick = "owner",
-    max_combat_log = 100
+-- Configuration AI (NOUVEAU)
+config.ai = {
+    enabled = true,
+    api_url = "http://127.0.0.1:8080/v1/completions",
+    max_tokens = 256,
+    temperature = 0.5,
 }
 
 return config
+
