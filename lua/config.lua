@@ -1,6 +1,7 @@
--- config.lua - Configuration globale
+-- Configuration globale du projet GNU-AI
 local config = {}
 
+-- Configuration IRC
 config.irc = {
     server = "irc.oftc.net",
     port = 6667,
@@ -13,6 +14,7 @@ config.irc = {
     command_cooldown = 1
 }
 
+-- Configuration AI
 config.ai = {
     enabled = true,
     api_url = "http://127.0.0.1:8080/v1/completions",
@@ -21,11 +23,14 @@ config.ai = {
     timeout = 10
 }
 
+-- Configuration du jeu
 config.game = {
     max_level = 100,
     default_energy = 50,
     max_dice_roll = 10,
-    creation_points = 100
+    creation_points = 100,
+    character_save_dir = "saves/",
+    monster_save_dir = "saves/monsters/"
 }
 
 return config

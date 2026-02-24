@@ -1,4 +1,4 @@
--- rpg/commands.lua - Système de commandes complet
+-- Système de commandes RPG pour GNU-AI
 local Character = require("rpg.character")
 local Monster = require("rpg.monster")
 local Dice = require("rpg.dice")
@@ -28,18 +28,6 @@ local COMMANDS = {
         example = "!createmonster Balrog loup_garou 10",
         category = "Création"
     },
-    generatemonster = {
-        syntax = "!generatemonster [niveau] [classe]",
-        description = "Génère un monstre aléatoire via l'AI.",
-        example = "!generatemonster 8 loup_garou",
-        category = "Génération AI"
-    },
-    generatequest = {
-        syntax = "!generatequest [niveau] [joueur]",
-        description = "Génère une quête aléatoire via l'AI.",
-        example = "!generatequest 5 Gandalf",
-        category = "Génération AI"
-    },
     roll = {
         syntax = "!roll [nombre]",
         description = "Lance 1 à 10 dés.",
@@ -57,18 +45,6 @@ local COMMANDS = {
         description = "Lance un combat.",
         example = "!fight Aragorn Balrog",
         category = "Combat"
-    },
-    describe = {
-        syntax = "!describe <entité>",
-        description = "Décrit une entité via l'AI.",
-        example = "!describe vampire",
-        category = "Génération AI"
-    },
-    ai = {
-        syntax = "!ai <question>",
-        description = "Pose une question à l'AI.",
-        example = "!ai Comment équilibrer un mage niveau 10?",
-        category = "Génération AI"
     },
     listclasses = {
         syntax = "!listclasses",
@@ -160,7 +136,6 @@ function RPGCommands.execute_command(command_str, context)
             "1. Test des dés: " .. Dice.roll_and_format(2),
             "2. Classes disponibles: OK",
             "3. Système de combat: OK",
-            "4. Intégration AI: " .. (context.ai and "OK" or "Désactivée"),
             "✅ Tous les tests de base ont réussi!"
         }
         return table.concat(results, "\n")

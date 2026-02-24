@@ -1,4 +1,4 @@
--- rpg/rpg_agent.lua - Agent RPG principal
+-- Agent RPG principal pour GNU-AI
 local AIBackend = require("ai_backend")
 local AIMonsters = require("rpg.ai_monsters")
 local AIQuests = require("rpg.ai_quests")

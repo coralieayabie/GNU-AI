@@ -1,4 +1,4 @@
--- irc_bot.lua - Bot IRC complet
+-- Bot IRC complet pour GNU-AI avec intégration RPG
 local socket = require("socket")
 local config = require("config")
 local RPGAgent = require("rpg.rpg_agent")
@@ -77,7 +77,6 @@ function IRCBot:handle_irc_command(sender, message)
     if message:match("^!%w+") then
         local response = self:process_command(sender, message)
 
-        -- Gestion spéciale pour l'aide multi-lignes
         if message:lower():match("^!help") then
             for line in response:gmatch("[^\n]+") do
                 self:send("PRIVMSG " .. config.irc.default_channel .. " :" .. sender .. ": " .. line)
@@ -89,7 +88,6 @@ function IRCBot:handle_irc_command(sender, message)
         return
     end
 
-    -- Commandes spéciales
     if message:lower() == "!ping" then
         self:send("PRIVMSG " .. config.irc.default_channel .. " :" .. sender .. ": 🏓 Pong!")
     end

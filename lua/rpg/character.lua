@@ -1,4 +1,4 @@
--- rpg/character.lua - Système de personnages
+-- Système de personnages RPG pour GNU-AI
 local RPGClasses = require("rpg.classes")
 local config = require("config")
 
@@ -9,6 +9,7 @@ function Character.create_with_attributes(name, class_name, level, attrs)
     local character_class = RPGClasses.get_character_class(class_name) or
                            RPGClasses.get_character_class("humain")
 
+    -- Calculer les points utilisés
     local total_points = 0
     for _, value in pairs(attrs) do
         total_points = total_points + (value or 0)
@@ -63,6 +64,23 @@ function Character.display_detailed_stats(character)
         character.attributes.magic,
         character.equipment.weapon, character.equipment.armor or "Aucune"
     )
+end
+
+function Character.add_experience(character, amount)
+    character.experience = character.experience + amount
+    while character.experience >= character.experience_to_next_level do
+        character.experience = character.experience - character.experience_to_next_level
+        character.level = character.level + 1
+        character.experience_to_next_level = math.floor(character.experience_to_next_level * 1.5)
+        character.health_max = character.health_max + 5
+        character.health = character.health_max
+        character.energy_max = character.energy_max + 3
+        character.energy = character.energy_max
+        for attr, _ in pairs(character.attributes) do
+            character.attributes[attr] = character.attributes[attr] + 1
+        end
+    end
+    return character.level
 end
 
 return Character
