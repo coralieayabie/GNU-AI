@@ -66,12 +66,12 @@ function IRCBot:send(message)
     return true
 end
 
--- Recevoir un message
+-- Recevoir un message (correction du pattern)
 function IRCBot:receive()
     if not self.state.socket then return nil, "Non connecté" end
     local line, err = self.state.socket:receive()
     if not line then return nil, err end
-    return line:gsub("\r?\n\$", "")
+    return line:gsub("\r?\n$", "")
 end
 
 -- Traiter une commande RPG
@@ -119,14 +119,75 @@ function IRCBot:handle_irc_command(sender, message)
                 "Réponds à cette question sur un RPG en Lua, en français, de manière concise et utile: " .. prompt
             )
             -- Envoyer la réponse en plusieurs parties si trop longue
-            if #response > 300 then
+            if response and #response > 300 then
                 for part in response:gmatch(".{1,300}") do
                     self:send("PRIVMSG " .. config.irc.default_channel .. " :" .. sender .. ": " .. part)
                     socket.sleep(0.4)
                 end
-            else
+            elseif response then
                 self:send("PRIVMSG " .. config.irc.default_channel .. " :" .. sender .. ": " .. response)
+            else
+                self:send("PRIVMSG " .. config.irc.default_channel .. " :" .. sender .. ": ⚠️ L'AI n'a pas pu générer de réponse.")
             end
         else
-            self:send("PRIVMSG " .. config.irc.default_channel .. " 
+            self:send("PRIVMSG " .. config.irc.default_channel .. " :" .. sender .. ": ⚠️ L'AI est désactivée.")
+        end
+        return
+    end
+end
+
+-- Boucle principale du bot
+function IRCBot:run()
+    if not self:connect() then return false end
+
+    print("🔄 Bot IRC en cours d'exécution. Ctrl+C pour quitter.")
+
+    while self.state.connected do
+        local line, err = self:receive()
+
+        if not line then
+            if err == "timeout" then
+                -- Vérifier le ping périodique
+                if socket.gettime() - self.state.last_ping > (config.irc.ping_interval or 60) then
+                    self:send("PING :" .. config.irc.server)
+                    self.state.last_ping = socket.gettime()
+                end
+            else
+                print("❌ Déconnecté: " .. tostring(err))
+                break
+            end
+        else
+            print("← " .. line)
+
+            -- Traiter les messages PRIVMSG
+            local sender, channel, msg = line:match("^:(.-)!.- PRIVMSG (.-) :(.+)")
+            if sender and channel and msg then
+                self:handle_irc_command(sender, msg)
+            end
+
+            -- Répondre aux PING
+            if line:match("^PING :") then
+                local ping_target = line:match("^PING :(.+)")
+                self:send("PONG :" .. ping_target)
+            end
+        end
+        socket.sleep(0.1)
+    end
+
+    self:disconnect()
+    return true
+end
+
+-- Déconnexion propre
+function IRCBot:disconnect()
+    if self.state.socket then
+        self:send("QUIT :GNU-AI Bot déconnecté")
+        self.state.socket:close()
+        self.state.socket = nil
+        self.state.connected = false
+        print("✅ Déconnexion propre du serveur IRC")
+    end
+end
+
+return IRCBot
 
