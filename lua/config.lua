@@ -1,7 +1,6 @@
--- config.lua - Configuration globale du projet
+-- config.lua - Configuration globale
 local config = {}
 
--- Configuration IRC
 config.irc = {
     server = "irc.oftc.net",
     port = 6667,
@@ -11,24 +10,22 @@ config.irc = {
     default_channel = "#gnu-ai-test",
     ping_interval = 60,
     connection_timeout = 30,
-    command_cooldown = 1, -- 1 seconde entre les commandes
+    command_cooldown = 1
 }
 
--- Configuration AI
 config.ai = {
     enabled = true,
     api_url = "http://127.0.0.1:8080/v1/completions",
     max_tokens = 256,
     temperature = 0.5,
-    timeout = 10,
+    timeout = 10
 }
 
--- Configuration du jeu
 config.game = {
     max_level = 100,
     default_energy = 50,
     max_dice_roll = 10,
-    creation_points = 100,
+    creation_points = 100
 }
 
 return config

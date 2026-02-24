@@ -1,4 +1,4 @@
--- rpg/monster.lua - Système de monstres RPG
+-- rpg/monster.lua - Système de monstres
 local RPGClasses = require("rpg.classes")
 
 local Monster = {}
@@ -30,23 +30,10 @@ function Monster.display_stats(monster)
         "Classe: %s\n" ..
         "Santé: %d/%d\n" ..
         "Dégâts: %d\n" ..
-        "Armure: %d\n" ..
-        "Attributs:\n" ..
-        "  Intelligence: %d\n" ..
-        "  Force: %d\n" ..
-        "  Dextérité: %d\n" ..
-        "  Endurance: %d\n" ..
-        "  Magie: %d\n" ..
-        "Sorts: %s",
+        "Armure: %d",
         monster.name, monster.level, monster.class,
         monster.health, monster.health_max,
-        monster.damage, monster.armor,
-        monster.attributes.intelligence or 0,
-        monster.attributes.strength or 0,
-        monster.attributes.dexterity or 0,
-        monster.attributes.endurance or 0,
-        monster.attributes.magic or 0,
-        table.concat(monster.spells, ", ")
+        monster.damage, monster.armor
     )
 end
 

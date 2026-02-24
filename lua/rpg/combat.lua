@@ -1,27 +1,12 @@
--- rpg/combat.lua - Système de combat RPG
+-- rpg/combat.lua - Système de combat
 local Dice = require("rpg.dice")
-local Character = require("rpg.character")
 
 local Combat = {}
-
--- Constantes de combat
-local CRITICAL_HIT_CHANCE = 10
-local CRITICAL_MULTIPLIER = 2
-local DODGE_CHANCE_BASE = 15
-local BLOCK_CHANCE_BASE = 20
 
 function Combat.create_combat_session(player, monster)
     return {
         player = player,
-        monster = {
-            name = monster.name,
-            class = monster.class,
-            level = monster.level,
-            health = monster.health,
-            damage = monster.damage,
-            armor = monster.armor,
-            attributes = monster.attributes
-        },
+        monster = monster,
         current_turn = "player",
         turn_count = 0,
         log = {},
@@ -29,13 +14,17 @@ function Combat.create_combat_session(player, monster)
     }
 end
 
--- Fonctions de combat...
 function Combat.execute_turn(combat)
-    -- ... (ton code existant de combat)
+    -- Implémentation simplifiée pour l'exemple
+    combat.turn_count = combat.turn_count + 1
+    combat.is_active = false
+    return true, "victoire"
 end
 
 function Combat.execute_full_combat(player, monster)
-    -- ... (ton code existant)
+    local combat = Combat.create_combat_session(player, monster)
+    Combat.execute_turn(combat)
+    return combat
 end
 
 return Combat

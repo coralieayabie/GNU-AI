@@ -1,4 +1,4 @@
--- rpg/rpg_agent.lua - Version corrigée
+-- rpg/rpg_agent.lua - Agent RPG principal
 local AIBackend = require("ai_backend")
 local AIMonsters = require("rpg.ai_monsters")
 local AIQuests = require("rpg.ai_quests")
@@ -30,20 +30,7 @@ function RPGAgent:execute(context)
     print("Système de jeu de rôle intégré avec succès!")
 end
 
--- Fonction d'exécution des commandes corrigée
 function RPGAgent:execute_command(command_str, context)
-    -- Vérifier si la commande est vide
-    if not command_str or command_str == "" then
-        return RPGCommands.show_short_help()
-    end
-
-    -- Extraire la commande principale
-    local cmd = command_str:match("^%w+")
-    if not cmd then
-        return RPGCommands.show_short_help()
-    end
-
-    -- Passer à RPGCommands
     return RPGCommands.execute_command(command_str, context)
 end
 

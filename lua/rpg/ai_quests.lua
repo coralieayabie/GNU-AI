@@ -1,4 +1,4 @@
--- rpg/ai_quests.lua - Génération de quêtes via l'AI
+-- rpg/ai_quests.lua - Génération de quêtes via AI
 local json = require("dkjson")
 
 local AIQuests = {}
@@ -6,9 +6,9 @@ AIQuests.__index = AIQuests
 
 local QUEST_PROMPTS = {
     base = "Génère une quête pour un RPG fantasy niveau %d. Format JSON: " ..
-           "{title: string, description: string, reward: {xp: number, gold: number}, steps: string[]}.",
+           "{title:string, description:string, reward:{xp:number, gold:number}, steps:string[]}",
     for_player = "Génère une quête pour %s (niveau %d, classe %s). Format JSON: " ..
-                 "{title: string, description: string, reward: {xp: number, gold: number}, steps: string[]}.",
+                 "{title:string, description:string, reward:{xp:number, gold:number}, steps:string[]}"
 }
 
 function AIQuests.new(ai_backend)

@@ -1,4 +1,4 @@
--- ai_backend.lua - Backend pour les requêtes à l'API locale
+-- ai_backend.lua - Backend pour l'API locale
 local http = require("socket.http")
 local ltn12 = require("ltn12")
 local json = require("dkjson")
@@ -8,9 +8,7 @@ local AIBackend = {}
 AIBackend.__index = AIBackend
 
 function AIBackend.new()
-    local self = setmetatable({}, AIBackend)
-    self.config = config.ai
-    return self
+    return setmetatable({config = config.ai}, { __index = AIBackend })
 end
 
 function AIBackend:query(prompt)
@@ -18,7 +16,7 @@ function AIBackend:query(prompt)
         prompt = "[INST]" .. prompt .. "[/INST]",
         max_tokens = self.config.max_tokens,
         temperature = self.config.temperature,
-        stream = false,
+        stream = false
     })
 
     local response = {}
@@ -28,7 +26,7 @@ function AIBackend:query(prompt)
         headers = {["Content-Type"] = "application/json"},
         source = ltn12.source.string(request_body),
         sink = ltn12.sink.table(response),
-        timeout = self.config.timeout,
+        timeout = self.config.timeout
     }
 
     if not success or status ~= 200 then

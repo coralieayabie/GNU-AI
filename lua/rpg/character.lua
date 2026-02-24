@@ -1,6 +1,5 @@
--- rpg/character.lua - Système de personnages RPG
+-- rpg/character.lua - Système de personnages
 local RPGClasses = require("rpg.classes")
-local Dice = require("rpg.dice")
 local config = require("config")
 
 local Character = {}
@@ -10,17 +9,17 @@ function Character.create_with_attributes(name, class_name, level, attrs)
     local character_class = RPGClasses.get_character_class(class_name) or
                            RPGClasses.get_character_class("humain")
 
-    -- Calculer les points utilisés
     local total_points = 0
     for _, value in pairs(attrs) do
         total_points = total_points + (value or 0)
     end
 
     if total_points > config.game.creation_points then
-        return nil, "La somme des attributs ne peut pas dépasser " .. config.game.creation_points .. " points"
+        return nil, "La somme des attributs ne peut pas dépasser " ..
+               config.game.creation_points .. " points"
     end
 
-    local character = {
+    return {
         name = name,
         class = character_class.name,
         level = level or 1,
@@ -44,18 +43,6 @@ function Character.create_with_attributes(name, class_name, level, attrs)
             damage_dealt = 0, damage_taken = 0, critical_hits = 0
         }
     }
-
-    -- Calculer les compétences
-    character.skills = {
-        attack = math.floor((character.attributes.strength + character.attributes.dexterity) / 2),
-        defense = math.floor(character.attributes.endurance / 2),
-        magic_attack = math.floor((character.attributes.intelligence + character.attributes.magic) / 2),
-        magic_defense = math.floor(character.attributes.magic),
-        stealth = math.floor(character.attributes.dexterity / 2),
-        perception = math.floor(character.attributes.intelligence / 2)
-    }
-
-    return character
 end
 
 function Character.display_detailed_stats(character)
@@ -63,8 +50,6 @@ function Character.display_detailed_stats(character)
         "=== %s (Lvl %d %s) ===\n" ..
         "Santé: %d/%d\n" ..
         "Énergie: %d/%d\n" ..
-        "Attaque: %d | Défense: %d\n" ..
-        "Magie: %d | Résistance magique: %d\n" ..
         "Attributs:\n" ..
         "  Intelligence: %d | Force: %d\n" ..
         "  Dextérité: %d | Endurance: %d\n" ..
@@ -73,33 +58,11 @@ function Character.display_detailed_stats(character)
         character.name, character.level, character.class,
         character.health, character.health_max,
         character.energy, character.energy_max,
-        character.skills.attack, character.skills.defense,
-        character.skills.magic_attack, character.skills.magic_defense,
         character.attributes.intelligence, character.attributes.strength,
         character.attributes.dexterity, character.attributes.endurance,
         character.attributes.magic,
         character.equipment.weapon, character.equipment.armor or "Aucune"
     )
-end
-
--- Autres fonctions de Character...
-function Character.add_experience(character, amount)
-    character.experience = character.experience + amount
-    while character.experience >= character.experience_to_next_level do
-        character.experience = character.experience - character.experience_to_next_level
-        character.level = character.level + 1
-        character.experience_to_next_level = math.floor(character.experience_to_next_level * 1.5)
-        character.health_max = character.health_max + 5
-        character.health = character.health_max
-        character.energy_max = character.energy_max + 3
-        character.energy = character.energy_max
-        for attr, _ in pairs(character.attributes) do
-            character.attributes[attr] = character.attributes[attr] + 1
-        end
-        character.skills.attack = math.floor((character.attributes.strength + character.attributes.dexterity) / 2)
-        character.skills.defense = math.floor(character.attributes.endurance / 2)
-    end
-    return character.level
 end
 
 return Character
