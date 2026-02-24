@@ -1,3 +1,4 @@
+-- ai_backend.lua - Backend pour les requêtes à l'API locale
 local http = require("socket.http")
 local ltn12 = require("ltn12")
 local json = require("dkjson")
@@ -27,7 +28,7 @@ function AIBackend:query(prompt)
         headers = {["Content-Type"] = "application/json"},
         source = ltn12.source.string(request_body),
         sink = ltn12.sink.table(response),
-        timeout = 10,
+        timeout = self.config.timeout,
     }
 
     if not success or status ~= 200 then

@@ -1,68 +1,47 @@
--- classes.lua - Définition des classes RPG pour GNU-AI
--- Adapté du système IRC RPG
-
+-- rpg/classes.lua - Définition des classes RPG
 local RPGClasses = {}
 
--- Classes de personnages jouables
+-- Classes de personnages
 RPGClasses.character_classes = {
     mage = {
         name = "Mage",
-        description = "Un puissant utilisateur de magie.",
+        description = "Maître des éléments et des sorts",
         base_attributes = {
-            intelligence = 8,
-            strength = 2,
-            dexterity = 4,
-            endurance = 3,
-            magic = 10
+            intelligence = 8, strength = 2, dexterity = 4,
+            endurance = 3, magic = 10
         },
-        base_spells = {"Boule de feu", "Éclair", "Bouclier magique"},
-        base_energy = 100,
-        base_energy_max = 100
+        base_health = 80,
+        base_spells = {"Boule de feu", "Éclair", "Bouclier magique"}
     },
-    
     humain = {
         name = "Humain",
-        description = "Un personnage polyvalent.",
+        description = "Polyvalent et équilibré",
         base_attributes = {
-            intelligence = 5,
-            strength = 5,
-            dexterity = 5,
-            endurance = 5,
-            magic = 5
+            intelligence = 5, strength = 5, dexterity = 5,
+            endurance = 5, magic = 5
         },
-        base_spells = {"Coup d'épée", "Bouclier"},
-        base_energy = 80,
-        base_energy_max = 80
+        base_health = 100,
+        base_spells = {"Coup d'épée", "Bouclier"}
     },
-    
     hobbit = {
         name = "Hobbit",
-        description = "Un personnage agile et furtif.",
+        description = "Agile et furtif",
         base_attributes = {
-            intelligence = 4,
-            strength = 2,
-            dexterity = 8,
-            endurance = 3,
-            magic = 3
+            intelligence = 4, strength = 2, dexterity = 8,
+            endurance = 3, magic = 3
         },
-        base_spells = {"Disparition", "Coup rapide"},
-        base_energy = 60,
-        base_energy_max = 60
+        base_health = 60,
+        base_spells = {"Disparition", "Coup rapide"}
     },
-    
     elfe = {
         name = "Elfe",
-        description = "Un personnage rapide et précis.",
+        description = "Rapide et précis",
         base_attributes = {
-            intelligence = 6,
-            strength = 3,
-            dexterity = 7,
-            endurance = 4,
-            magic = 6
+            intelligence = 6, strength = 3, dexterity = 7,
+            endurance = 4, magic = 6
         },
-        base_spells = {"Tir précis", "Flèche magique"},
-        base_energy = 70,
-        base_energy_max = 70
+        base_health = 70,
+        base_spells = {"Tir précis", "Flèche magique"}
     }
 }
 
@@ -70,62 +49,52 @@ RPGClasses.character_classes = {
 RPGClasses.monster_classes = {
     loup_garou = {
         name = "Loup-garou",
-        description = "Un monstre rapide et puissant.",
+        description = "Créature rapide et puissante",
         base_attributes = {
-            intelligence = 4,
-            strength = 8,
-            dexterity = 7,
-            endurance = 6,
-            magic = 3
+            intelligence = 4, strength = 8, dexterity = 7,
+            endurance = 6, magic = 3
         },
-        base_spells = {"Griffes acérées", "Hurlement terrifiant"},
         base_health = 60,
         base_damage = 10,
         base_armor = 5
     },
-    
     vampire = {
         name = "Vampire",
-        description = "Un monstre immortel avec régénération.",
+        description = "Immortel avec régénération",
         base_attributes = {
-            intelligence = 7,
-            strength = 6,
-            dexterity = 8,
-            endurance = 5,
-            magic = 7
+            intelligence = 7, strength = 6, dexterity = 8,
+            endurance = 5, magic = 7
         },
-        base_spells = {"Morsure vampirique", "Régénération"},
         base_health = 70,
         base_damage = 9,
         base_armor = 4
     }
 }
 
--- Fonction pour obtenir une classe par nom
+-- Fonctions utilitaires
 function RPGClasses.get_character_class(class_name)
     return RPGClasses.character_classes[class_name:lower()]
 end
 
--- Fonction pour obtenir une classe de monstre par nom
 function RPGClasses.get_monster_class(class_name)
     return RPGClasses.monster_classes[class_name:lower()]
 end
 
--- Fonction pour obtenir la liste des classes disponibles
 function RPGClasses.get_available_character_classes()
-    local class_list = {}
-    for class_name, _ in pairs(RPGClasses.character_classes) do
-        table.insert(class_list, class_name)
+    local classes = {}
+    for name, _ in pairs(RPGClasses.character_classes) do
+        table.insert(classes, name)
     end
-    return class_list
+    return classes
 end
 
 function RPGClasses.get_available_monster_classes()
-    local class_list = {}
-    for class_name, _ in pairs(RPGClasses.monster_classes) do
-        table.insert(class_list, class_name)
+    local classes = {}
+    for name, _ in pairs(RPGClasses.monster_classes) do
+        table.insert(classes, name)
     end
-    return class_list
+    return classes
 end
 
 return RPGClasses
+

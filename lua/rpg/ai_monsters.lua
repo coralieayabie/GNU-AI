@@ -1,12 +1,13 @@
+-- rpg/ai_monsters.lua - Génération de monstres via l'AI
 local json = require("dkjson")
 
 local AIMonsters = {}
 AIMonsters.__index = AIMonsters
 
 local MONSTER_PROMPTS = {
-    base = "Génère un monstre pour un RPG fantasy niveau %d. Format JSON: " ..
+    base = "Génère un monstre pour un RPG fantasy niveau %d. Format JSON strict: " ..
            "{name: string, class: string, level: number, description: string, health: number, damage: number, armor: number, loot: string[]}.",
-    from_class = "Génère un monstre de classe '%s' niveau %d. Format JSON: " ..
+    from_class = "Génère un monstre de classe '%s' niveau %d. Format JSON strict: " ..
                  "{name: string, description: string, health: number, damage: number, armor: number, loot: string[]}.",
 }
 

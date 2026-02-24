@@ -1,3 +1,4 @@
+-- rpg/ai_quests.lua - Génération de quêtes via l'AI
 local json = require("dkjson")
 
 local AIQuests = {}

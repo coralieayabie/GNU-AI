@@ -1,3 +1,4 @@
+-- main_irc_improved.lua - Point d'entrée du bot IRC
 local IRCBot = require("irc_bot")
 
 local function main()
