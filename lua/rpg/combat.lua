@@ -1,13 +1,7 @@
--- Système de combat RPG pour GNU-AI
+-- Système de combat RPG
 local Dice = require("rpg.dice")
 
 local Combat = {}
-
--- Constantes de combat
-local CRITICAL_HIT_CHANCE = 10
-local CRITICAL_MULTIPLIER = 2
-local DODGE_CHANCE_BASE = 15
-local BLOCK_CHANCE_BASE = 20
 
 function Combat.create_combat_session(player, monster)
     return {

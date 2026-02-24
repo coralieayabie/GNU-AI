@@ -1,7 +1,7 @@
--- Définition des classes RPG pour GNU-AI
+-- Définition des classes RPG
 local RPGClasses = {}
 
--- Classes de personnages jouables
+-- Classes de personnages
 RPGClasses.character_classes = {
     mage = {
         name = "Mage",
@@ -22,26 +22,6 @@ RPGClasses.character_classes = {
         },
         base_health = 100,
         base_spells = {"Coup d'épée", "Bouclier"}
-    },
-    hobbit = {
-        name = "Hobbit",
-        description = "Agile et furtif",
-        base_attributes = {
-            intelligence = 4, strength = 2, dexterity = 8,
-            endurance = 3, magic = 3
-        },
-        base_health = 60,
-        base_spells = {"Disparition", "Coup rapide"}
-    },
-    elfe = {
-        name = "Elfe",
-        description = "Rapide et précis",
-        base_attributes = {
-            intelligence = 6, strength = 3, dexterity = 7,
-            endurance = 4, magic = 6
-        },
-        base_health = 70,
-        base_spells = {"Tir précis", "Flèche magique"}
     }
 }
 
@@ -57,17 +37,6 @@ RPGClasses.monster_classes = {
         base_health = 60,
         base_damage = 10,
         base_armor = 5
-    },
-    vampire = {
-        name = "Vampire",
-        description = "Immortel avec régénération",
-        base_attributes = {
-            intelligence = 7, strength = 6, dexterity = 8,
-            endurance = 5, magic = 7
-        },
-        base_health = 70,
-        base_damage = 9,
-        base_armor = 4
     }
 }
 

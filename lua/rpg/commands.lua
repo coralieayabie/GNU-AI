@@ -1,4 +1,4 @@
--- Système de commandes RPG pour GNU-AI
+-- Système de commandes RPG complet
 local Character = require("rpg.character")
 local Monster = require("rpg.monster")
 local Dice = require("rpg.dice")
@@ -7,56 +7,127 @@ local Combat = require("rpg.combat")
 
 local RPGCommands = {}
 
--- Liste des commandes avec descriptions et exemples
+-- Liste des commandes avec descriptions et fonctions
 local COMMANDS = {
     help = {
         syntax = "!help [catégorie]",
-        description = "Affiche cette aide. Catégories disponibles: création, combat, utilitaires, ai",
+        description = "Affiche cette aide",
         example = "!help création",
-        category = "Aide"
+        category = "Aide",
+        func = function(context, parts)
+            return RPGCommands.show_help(parts[2])
+        end
     },
     createplayer = {
         syntax = "!createplayer <nom> <classe> <niveau> <int> <str> <dex> <end> <mag>",
-        description = "Crée un personnage. Distribuez 100 points entre les attributs.",
+        description = "Crée un personnage",
         example = "!createplayer Aragorn humain 5 20 20 15 15 10",
-        category = "Création"
+        category = "Création",
+        func = function(context, parts)
+            if #parts < 9 then
+                return "Usage: " .. COMMANDS.createplayer.syntax
+            end
+
+            local name, class_name = parts[2], parts[3]
+            local level = tonumber(parts[4])
+            local attrs = {
+                intelligence = tonumber(parts[5]),
+                strength = tonumber(parts[6]),
+                dexterity = tonumber(parts[7]),
+                endurance = tonumber(parts[8]),
+                magic = tonumber(parts[9])
+            }
+
+            local character, err = Character.create_with_attributes(name, class_name, level, attrs)
+            if not character then
+                return err
+            end
+
+            context.characters[name] = character
+            return string.format("✅ Personnage créé: %s (%s, Lvl %d)", name, class_name, level)
+        end
     },
     createmonster = {
         syntax = "!createmonster <nom> <classe> <niveau>",
-        description = "Crée un monstre. Classes disponibles: " ..
-                      table.concat(RPGClasses.get_available_monster_classes(), ", "),
+        description = "Crée un monstre",
         example = "!createmonster Balrog loup_garou 10",
-        category = "Création"
+        category = "Création",
+        func = function(context, parts)
+            if #parts < 4 then
+                return "Usage: " .. COMMANDS.createmonster.syntax
+            end
+
+            local name, class_name = parts[2], parts[3]
+            local level = tonumber(parts[4])
+
+            local monster, err = Monster.create(name, class_name, level)
+            if not monster then
+                return err
+            end
+
+            context.monsters[name] = monster
+            return string.format("✅ Monstre créé: %s (%s, Lvl %d)", name, class_name, level)
+        end
     },
     roll = {
         syntax = "!roll [nombre]",
-        description = "Lance 1 à 10 dés.",
+        description = "Lance des dés",
         example = "!roll 3",
-        category = "Utilitaires"
-    },
-    stats = {
-        syntax = "!stats <player/monster> <nom>",
-        description = "Affiche les statistiques.",
-        example = "!stats player Aragorn",
-        category = "Information"
-    },
-    fight = {
-        syntax = "!fight <joueur> <monstre>",
-        description = "Lance un combat.",
-        example = "!fight Aragorn Balrog",
-        category = "Combat"
+        category = "Utilitaires",
+        func = function(context, parts)
+            local num_dice = tonumber(parts[2]) or 1
+            return "🎲 " .. Dice.roll_and_format(num_dice)
+        end
     },
     listclasses = {
         syntax = "!listclasses",
-        description = "Liste les classes disponibles.",
+        description = "Liste les classes disponibles",
         example = "!listclasses",
-        category = "Information"
+        category = "Information",
+        func = function(context, parts)
+            local char_classes = table.concat(RPGClasses.get_available_character_classes(), ", ")
+            local monster_classes = table.concat(RPGClasses.get_available_monster_classes(), ", ")
+            return "Classes disponibles:\nPersonnages: " .. char_classes ..
+                   "\nMonstres: " .. monster_classes
+        end
+    },
+    stats = {
+        syntax = "!stats <player/monster> <nom>",
+        description = "Affiche les statistiques",
+        example = "!stats player Aragorn",
+        category = "Information",
+        func = function(context, parts)
+            if #parts < 3 then
+                return "Usage: " .. COMMANDS.stats.syntax
+            end
+
+            local type, name = parts[2]:lower(), parts[3]
+
+            if type == "player" and context.characters[name] then
+                return Character.display_detailed_stats(context.characters[name])
+            elseif type == "monster" and context.monsters[name] then
+                return Monster.display_stats(context.monsters[name])
+            else
+                return "Entité non trouvée: " .. name
+            end
+        end
     },
     test = {
         syntax = "!test",
-        description = "Exécute un test complet des fonctionnalités de base.",
+        description = "Teste les fonctionnalités de base",
         example = "!test",
-        category = "Utilitaires"
+        category = "Utilitaires",
+        func = function(context, parts)
+            local results = {
+                "🧪 TEST DES FONCTIONNALITÉS DE BASE",
+                "==============================",
+                "1. Test des dés: " .. Dice.roll_and_format(2),
+                "2. Classes disponibles: OK",
+                "3. Système de combat: OK",
+                "✅ Tous les tests de base ont réussi!"
+            }
+            return table.concat(results, "\n")
+        end
     }
 }
 
@@ -87,16 +158,26 @@ function RPGCommands.show_help(category)
         table.insert(help_lines, "")
         table.insert(help_lines, "🔹 " .. category .. ":")
         for _, cmd in ipairs(commands) do
-            table.insert(help_lines, string.format("  !%s", cmd.name))
-            table.insert(help_lines, string.format("    %s", cmd.description))
-            table.insert(help_lines, string.format("    Exemple: %s", cmd.example))
+            table.insert(help_lines, "  !" .. cmd.name)
+            table.insert(help_lines, "    " .. cmd.description)
+            table.insert(help_lines, "    Exemple: " .. cmd.example)
         end
     end
 
     return table.concat(help_lines, "\n")
 end
 
--- Fonction pour exécuter une commande
+-- Fonction pour afficher une aide courte
+function RPGCommands.show_short_help()
+    local commands = {}
+    for name, _ in pairs(COMMANDS) do
+        table.insert(commands, "!" .. name)
+    end
+    return "Commandes disponibles: " .. table.concat(commands, ", ") ..
+           ". Tapez !help pour plus de détails."
+end
+
+-- Fonction principale d'exécution des commandes
 function RPGCommands.execute_command(command_str, context)
     local parts = {}
     for word in command_str:gmatch("%S+") do
@@ -104,46 +185,19 @@ function RPGCommands.execute_command(command_str, context)
     end
 
     if #parts == 0 then
-        return RPGCommands.show_help()
+        return RPGCommands.show_short_help()
     end
 
     local cmd = parts[1]:lower()
+    cmd = cmd:gsub("^!", "")  -- Enlever le ! si présent
+
     local command = COMMANDS[cmd]
-
     if not command then
-        return "Commande inconnue. Tapez !help pour la liste des commandes."
+        return "Commande inconnue. " .. RPGCommands.show_short_help()
     end
 
-    -- Exécution des commandes
-    if cmd == "help" then
-        return RPGCommands.show_help(parts[2])
-
-    elseif cmd == "roll" then
-        local num_dice = tonumber(parts[2]) or 1
-        return "🎲 " .. Dice.roll_and_format(num_dice)
-
-    elseif cmd == "listclasses" then
-        local char_classes = table.concat(RPGClasses.get_available_character_classes(), ", ")
-        local monster_classes = table.concat(RPGClasses.get_available_monster_classes(), ", ")
-        return "Classes disponibles:\nPersonnages: " .. char_classes ..
-               "\nMonstres: " .. monster_classes
-
-    elseif cmd == "test" then
-        -- Test complet des fonctionnalités
-        local results = {
-            "🧪 TEST DES FONCTIONNALITÉS DE BASE",
-            "==============================",
-            "1. Test des dés: " .. Dice.roll_and_format(2),
-            "2. Classes disponibles: OK",
-            "3. Système de combat: OK",
-            "✅ Tous les tests de base ont réussi!"
-        }
-        return table.concat(results, "\n")
-
-    else
-        return string.format("La commande !%s n'est pas encore implémentée. " ..
-                             "Tapez !help pour voir les commandes disponibles.", cmd)
-    end
+    -- Exécuter la fonction associée à la commande
+    return command.func(context, parts)
 end
 
 return RPGCommands

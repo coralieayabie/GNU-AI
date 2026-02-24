@@ -1,4 +1,4 @@
--- Système de dés RPG pour GNU-AI
+-- Système de dés RPG
 local Dice = {}
 
 function Dice.roll_d6()

@@ -1,4 +1,4 @@
--- Backend pour les requêtes à l'API locale de devastral/llama.cpp
+-- Backend pour les requêtes à l'API locale
 local http = require("socket.http")
 local ltn12 = require("ltn12")
 local json = require("dkjson")
