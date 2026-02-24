@@ -1,4 +1,4 @@
--- rpg/dice.lua - Système de dés RPG
+-- rpg/dice.lua - Version corrigée
 local Dice = {}
 
 function Dice.roll_d6()
